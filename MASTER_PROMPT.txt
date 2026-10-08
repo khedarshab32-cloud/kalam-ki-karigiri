@@ -1,0 +1,134 @@
+You are the lead product engineer responsible for finishing the app “Kalam Ki Karigiri — अल्फ़ाज़ • आवाज़ • एहसास”. Do not stop at a prototype. Work autonomously until the project is production-ready. Do not repeatedly ask me what to build next; make sensible engineering decisions and continue.
+
+PRIMARY GOAL
+Build a mobile-first poetry + music discovery app where users can search poets, Shayari, ghazals, songs, singers, lyricists, composers and videos. The Music experience should feel like a modern streaming app: search, play, persistent queue, next/previous, shuffle, repeat, playlists, favorites, recently played, mini-player, full player, lock-screen controls and—where the provider legally supports it—true background playback.
+
+MUSIC REQUIREMENTS
+1. Universal music search box:
+   - Search by exact or partial song title, artist, singer, lyricist, composer, album/movie and keywords.
+   - Return results from all configured providers through a provider-adapter interface.
+   - Do not scrape private/internal APIs.
+   - Do not download, rip, proxy, decrypt, DRM-bypass, or redistribute copyrighted audio/video.
+   - Every provider must use its official API/SDK/embed/player and comply with its current terms.
+
+2. Provider architecture:
+   - Create a MusicProvider interface with search(), getTrack(), play(), pause(), next(), previous(), seek(), queue(), getCapabilities().
+   - Implement YouTube as the first live provider using the official YouTube Data API + official IFrame Player API.
+   - Add optional Spotify adapter only through Spotify's official OAuth/Web Playback/Connect capabilities where permitted. Treat Premium and current Spotify developer/commercial restrictions as hard requirements.
+   - Add an AuthorizedAudioProvider adapter for licensed/direct audio URLs. This is the provider that can support real HTML5 audio + Media Session background playback.
+   - Make it easy to add Apple Music, SoundCloud, JioSaavn, Gaana or another provider later only if that provider exposes an official, permitted playback integration. Never fake support.
+   - If a provider can only supply metadata/search links but cannot legally provide in-app playback, clearly label it as “Open in provider” rather than pretending it can stream.
+
+3. “Every song should appear” behavior:
+   - Search every configured provider in parallel.
+   - Normalize results into one Track model: id, provider, title, artist, album, artwork, duration, playable, playbackType, providerUrl, explicit, source.
+   - Deduplicate by provider ID and normalized title/artist.
+   - Rank exact title/artist matches first, then relevance.
+   - Never claim literally every song on the internet; the UI should say “Search across connected music sources”.
+
+4. Continuous playback:
+   - Persistent queue survives navigation and refresh.
+   - Play current track immediately after explicit user interaction.
+   - Automatically advance to next track when current track ends.
+   - Support Next, Previous, Play/Pause, Seek, Shuffle, Repeat Off/One/All.
+   - If a track fails, automatically skip to the next playable track and show a non-blocking error.
+   - Save queue/index/position/repeat/shuffle state locally.
+   - Provide “Up next” queue editor: reorder, remove, clear, save queue as playlist.
+
+5. Background playback:
+   - Implement Web Media Session API for authorized HTML5 audio sources: metadata, play, pause, seekbackward, seekforward, previoustrack, nexttrack.
+   - Use an HTMLAudioElement for direct/licensed audio providers.
+   - For Android production build, use a native foreground playback service with Media3/ExoPlayer + MediaSession (or the provider's officially supported native playback SDK). The notification must show artwork/title and Play/Pause/Next/Previous.
+   - Keep playback alive when the app is backgrounded or the screen is locked only when the provider and platform permit it.
+   - Do not claim YouTube iframe playback provides guaranteed lock-screen audio. Browser/YouTube autoplay/background policies must be respected.
+   - Add Android audio focus handling, noisy-output handling, headset/Bluetooth media controls, and resume-after-interruption where permitted.
+
+6. Playlists:
+   - Create, rename, delete playlists.
+   - Add/remove/reorder songs.
+   - Add current track to playlist.
+   - Add whole queue to playlist.
+   - Play playlist from any track.
+   - Shuffle playlist.
+   - Duplicate-safe track insertion.
+   - Cover image generated from first tracks or user-selected artwork.
+   - Recently played and Favorites are special system playlists.
+   - For logged-in users sync playlists to backend; for guests persist locally and migrate after login.
+
+7. Full player UI:
+   - Large artwork, title, artist, provider badge.
+   - Progress/seek bar.
+   - Play/pause, previous/next, shuffle, repeat.
+   - Queue button.
+   - Add to playlist button.
+   - Favorite button.
+   - Share provider URL.
+   - “Open in YouTube/Spotify/etc.” when required by provider restrictions.
+   - Mini-player stays visible above bottom navigation.
+
+8. Search UX:
+   - Debounced search.
+   - Search suggestions/history.
+   - Tabs/filters: All, Songs, Artists, Albums, Videos, Shayari.
+   - Loading skeletons, empty states and provider-specific errors.
+   - If live search backend is not configured, show demo/sample results rather than a broken blank page.
+
+9. Backend:
+   - Never expose provider API secrets in frontend.
+   - Create server endpoints for provider search/auth where required.
+   - Validate all input.
+   - Rate-limit public search endpoints.
+   - Cache safe metadata responses.
+   - Use environment variables for secrets.
+   - Add structured logs and error handling.
+
+10. Data model:
+   users, artists, poets, works, songs, tracks, providers, playlists, playlist_items, favorites, recently_played, queue_snapshots, categories, reports, content_sources, permissions.
+   Include indexes for title/artist search and provider IDs.
+
+11. Android packaging:
+   - Produce a proper Android app shell (prefer Capacitor if it reduces duplicated UI work, or native Kotlin if required for reliable background playback).
+   - Add app icon/splash.
+   - Configure notification permission where required.
+   - Configure media notification.
+   - Configure deep links for provider URLs.
+   - Preserve playback state across activity recreation.
+   - Test Android screen lock, notification controls, Bluetooth headset controls, app backgrounding, rotation and network loss.
+
+12. Legal/content rules:
+   - Use only authorized/licensed playback mechanisms.
+   - Never implement YouTube downloading, audio extraction, stream proxying, DRM circumvention or ripping.
+   - Never scrape Spotify/YouTube Music private endpoints.
+   - If a source does not permit third-party in-app playback, show its official link instead.
+   - Download button must exist only for content that is explicitly owned/licensed/authorized for download. Otherwise show Save/Playlist.
+
+13. Existing app integration:
+   - Preserve the existing Kalam Ki Karigiri poetry screens, poet profiles, Shayari, ghazals, songs, saved items and admin architecture.
+   - Keep the dark premium Indian visual style: black/charcoal background, warm gold/bronze accents, elegant typography, subtle texture, high readability.
+   - Mobile-first, responsive, accessible, fast.
+
+14. Reliability:
+   - No blank result screens.
+   - No uncaught promise errors.
+   - Add loading/error/empty states everywhere.
+   - Gracefully handle expired OAuth, provider outages, unavailable videos, private/deleted tracks, rate limits and network loss.
+   - Add unit tests for queue/repeat/shuffle/playlist logic and integration tests for provider adapters.
+
+15. Delivery:
+   - Build the complete project, not just snippets.
+   - Keep API keys server-side.
+   - Provide .env.example.
+   - Provide setup/run/build instructions.
+   - Generate a production build and Android project/package when the environment supports it.
+   - Verify the app locally before declaring it finished.
+   - If credentials are missing, implement the integration point, demo fallback and exact configuration instructions, then continue with all other work.
+   - Do not stop merely because a third-party credential is missing.
+
+IMPORTANT PRODUCT TRUTH
+The requirement is “search across all connected sources and play every track that those sources legally expose to this app,” not “rip any song from anywhere.” Never silently substitute an unauthorized implementation. If a provider only supports opening its own app/site, make that path beautiful and obvious.
+
+FINAL RESULT
+The finished Kalam Ki Karigiri app should feel like a polished poetry + music platform with a persistent streaming-style player, continuous queue, playlists, favorites, search across configured providers, and true Android background playback wherever an authorized audio provider permits it.
+
+V7 IMPLEMENTATION NOTE
+The current build adds provider-normalized search, optional Spotify metadata, authorized direct-audio playback, persistent V7 music state, and an Android Media3 background playback foundation. Do not remove these foundations when extending the app.

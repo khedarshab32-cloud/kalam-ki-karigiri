@@ -1,0 +1,217 @@
+KALAM KI KARIGIRI — V9 ANDROID + PRODUCTION COMPLETION MASTER PROMPT
+
+You are the lead Android/product engineer. Continue from the existing Kalam Ki Karigiri V8 project. Do not rebuild blindly and do not stop after a prototype. Work autonomously until every achievable acceptance criterion below is implemented, tested, documented, and packaged.
+
+NON-STOP RULE
+- Do not repeatedly ask what to do next.
+- If credentials are missing, implement the integration, demo fallback, configuration file, and exact setup steps, then continue.
+- If one provider cannot legally support a feature, do not fake it; use the official-provider fallback and continue with the rest of the app.
+- Never claim an APK is tested unless it was actually built and installed/emulated successfully.
+
+PRIMARY DELIVERABLE
+Produce a production-oriented Android application package for “Kalam Ki Karigiri — अल्फ़ाज़ • आवाज़ • एहसास” while preserving the existing web app features.
+
+1. ANDROID SHELL
+- Use the existing web UI inside a secure Android WebView or Capacitor shell.
+- Bundle the production web assets locally.
+- Enable JavaScript and DOM storage only because the bundled app requires them.
+- Keep external links outside the trusted WebView where appropriate.
+- Never allow arbitrary remote pages to gain access to native bridges.
+- Add proper app icon, splash screen, theme, orientation, deep-link handling, and release metadata.
+
+2. NATIVE BACKGROUND AUDIO
+- Use AndroidX Media3 ExoPlayer.
+- Use MediaSessionService/MediaLibraryService as appropriate.
+- Keep Player + MediaSession in the service, not Activity.
+- Support play, pause, seek, previous, next, queue, shuffle, repeat and metadata.
+- Handle audio focus and noisy-output events.
+- Support Bluetooth/headset media buttons.
+- Support lock-screen and notification media controls.
+- Preserve playback across Activity recreation.
+- Implement playback resumption where practical.
+- Use foreground-service media playback permissions correctly.
+
+3. WEB ↔ NATIVE PLAYBACK BRIDGE
+Create a narrowly scoped bridge for first-party bundled JavaScript only.
+Required commands:
+- nativePlay(trackJson)
+- nativePause()
+- nativeNext()
+- nativePrevious()
+- nativeSeek(positionMs)
+- nativeSetQueue(queueJson)
+- nativeSetRepeat(mode)
+- nativeSetShuffle(enabled)
+- nativeGetState()
+
+Never accept arbitrary executable code through the bridge.
+Validate every track before native playback.
+Only permit authorized/direct audio URLs for ExoPlayer playback.
+Never use the bridge to extract YouTube audio or bypass DRM/provider restrictions.
+
+4. PLAYER STATE
+Use one canonical state model:
+- queue
+- currentIndex
+- currentPosition
+- duration
+- playing
+- shuffle
+- repeat
+- provider
+- track metadata
+
+Persist safe state locally and restore it on startup.
+Keep web UI and native player synchronized.
+
+5. PROVIDERS
+Implement a provider interface with:
+- search
+- getTrack
+- getCapabilities
+- play/open
+- normalize
+
+YouTube:
+- Official Data API search.
+- Official IFrame player for permitted playback.
+- Never extract or rip audio.
+
+Spotify:
+- Official OAuth/API/SDK only.
+- Respect Premium and developer-policy requirements.
+- If in-app playback is unavailable, show Open in Spotify.
+
+AuthorizedAudioProvider:
+- Licensed/direct audio URL.
+- Native ExoPlayer playback.
+- Real background playback and MediaSession support.
+
+Keep future adapters possible without pretending unsupported providers are playable.
+
+6. UNIVERSAL SEARCH
+Search connected providers in parallel.
+Normalize to:
+{id, provider, title, artist, album, artwork, duration, playable, playbackType, providerUrl, explicit, source}
+
+Rank exact matches first.
+Deduplicate provider duplicates.
+Provide tabs:
+All / Songs / Artists / Albums / Videos / Shayari
+
+Include:
+- debounce
+- search history
+- suggestions
+- skeleton loading
+- empty state
+- retry state
+- provider unavailable state
+
+7. QUEUE + PLAYLISTS
+Implement:
+- add/remove/reorder queue
+- clear queue
+- save queue as playlist
+- create/rename/delete playlist
+- add/remove/reorder tracks
+- play playlist
+- shuffle playlist
+- favorites
+- recently played
+
+Guest: local persistence.
+Authenticated: backend sync.
+On login: migrate local playlists to account without duplication.
+
+8. FULL PLAYER
+Include artwork, title, artist, album, provider, progress, seek, previous, play/pause, next, shuffle, repeat, queue, favorite, add-to-playlist, share and open-provider.
+
+9. MINI PLAYER
+Persistent above bottom navigation.
+Tap opens full player.
+Never interrupt playback during normal route navigation.
+
+10. BACKGROUND PLAYBACK UX
+For authorized native tracks:
+- screen lock continues playback
+- notification shows artwork/title/artist
+- notification has play/pause/previous/next
+- Bluetooth controls work
+- next track automatically starts
+
+For providers that prohibit background/in-app playback:
+- do not bypass restriction
+- explain briefly
+- provide official provider action
+
+11. BACKEND
+Keep API keys server-side.
+Use .env.example.
+Add validation, rate limiting, safe caching, structured errors and logging.
+Never put secrets in HTML/JavaScript.
+
+12. SECURITY
+- HTTPS in production.
+- No arbitrary WebView navigation.
+- No unsafe JS bridge methods.
+- Validate provider URLs.
+- Validate track IDs.
+- Sanitize search input.
+- Do not expose private tokens.
+- Do not implement downloading/ripping/DRM bypass.
+
+13. DATABASE
+Support:
+users, artists, poets, works, songs, tracks, providers, playlists, playlist_items, favorites, recently_played, queue_snapshots, categories, reports, content_sources, download_permissions.
+Add indexes for title, artist, provider ID and playlist relationships.
+
+14. EXISTING FEATURES MUST SURVIVE
+Do not remove:
+Home, Search, Shayari, Ghazals, Poets, Songs, Videos, Saved, Collections, Profile, Settings, About, Help/Report and Admin.
+
+15. DESIGN
+Preserve premium Indian dark aesthetic:
+charcoal/black, warm gold/bronze, elegant typography, subtle gradients/textures, poetry cards, Hindi/Urdu/English support, responsive mobile-first spacing.
+
+16. TESTING GATE
+Before completion, test:
+- npm/server syntax
+- provider normalization
+- queue add/remove/reorder
+- next/previous
+- shuffle
+- repeat off/one/all
+- playlist CRUD
+- persistence after refresh
+- search empty/error/success
+- unavailable provider
+- native service lifecycle
+- Activity recreation
+- screen lock behavior where a real device/emulator is available
+- notification controls where a real device/emulator is available
+
+Do not report a test as PASS unless it actually ran.
+
+17. BUILD OUTPUT
+Produce:
+- source ZIP
+- Android project
+- README with exact setup
+- .env.example
+- test command
+- release/build instructions
+- known provider limitations
+- APK only if actually buildable in the available environment
+
+If Android SDK/Gradle is unavailable in the current environment, do not pretend to compile. Complete the project files, run every available static/syntax test, and clearly mark APK compilation as pending local Android Studio/CI build.
+
+FINAL ACCEPTANCE FLOW
+User must be able to:
+Search → find → play → add to queue → continue automatically → next/previous → shuffle/repeat → create playlist → save → close/minimize app → resume.
+
+For authorized direct audio:
+Lock phone → playback continues → notification controls remain available.
+
+For restricted providers:
+Search still works where API permits, but playback must use only the provider’s authorized mechanism.
